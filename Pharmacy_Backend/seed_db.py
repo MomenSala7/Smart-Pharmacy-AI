@@ -4,18 +4,16 @@ import models
 
 def seed_database():
     db = SessionLocal()
-    print("⏳ بنقرأ ملف الـ CSV... ثواني ويكون جاهز!")
+    print("⏳ بنقرأ ملف الـ CSV وبنجهز الداتا للجدولين... ثواني ويكون جاهز!")
     
     try:
         # قراءة الملف اللي فيه الداتا
         df = pd.read_csv("extended_drug_shortage_data_rounded.csv")
         
-        # هناخد دواء واحد من كل نوع عشان منكررش الأدوية (بافتراض إن عمود الاسم اسمه name)
-        # لو الملف مفيش فيه عمود اسم الدواء، هنولد أسماء افتراضية للتجربة
+        # هناخد دواء واحد من كل نوع عشان منكررش الأدوية
         if 'name' in df.columns:
             unique_drugs = df.drop_duplicates(subset=['name'])
         else:
-            # لو الداتا بتاعتكم مفهاش أسماء أدوية صريحة، هناخد أول 50 صف كأدوية مختلفة
             unique_drugs = df.head(50).copy()
             unique_drugs['name'] = [f"Medication_{i}" for i in range(1, 51)]
             unique_drugs['category'] = "General"
@@ -23,26 +21,37 @@ def seed_database():
             
         added_count = 0
         for index, row in unique_drugs.iterrows():
-            # التأكد إن الدواء مش موجود أصلاً عشان منعملش تكرار
-            existing_med = db.query(models.Medication).filter(models.Medication.name == row['name']).first()
+            brand_name_val = row['name']
             
-            if not existing_med:
-                new_med = models.Medication(
-                    name=row['name'],
+            # التأكد إن الدواء مش موجود أصلاً في جدول المنتجات
+            existing_product = db.query(models.Product).filter(models.Product.brand_name == brand_name_val).first()
+            
+            if not existing_product:
+                # 1. إنشاء المنتج في جدول (Product)
+                new_product = models.Product(
+                    brand_name=brand_name_val,
                     category=row.get('category', 'General'),
-                    current_stock=int(row.get('current_stock', 10)),
-                    price=float(row.get('price', 50.0)),
+                    unit_price=float(row.get('price', 50.0))
+                )
+                db.add(new_product)
+                db.flush()  # بنعمل flush عشان الداتابيز تدي للمنتج ID نقدر نستخدمه في المخزون
+                
+                # 2. إنشاء المخزون المرتبط بيه في جدول (Inventory)
+                new_inventory = models.Inventory(
+                    product_id=new_product.id, # ربطنا المخزون بالمنتج
+                    stock_level=int(row.get('current_stock', 10)), 
                     min_stock=int(row.get('min_stock', 5)),
                     daily_usage=float(row.get('daily_usage', 1.0)),
                     lead_time_days=int(row.get('lead_time_days', 2))
                 )
-                db.add(new_med)
+                db.add(new_inventory)
                 added_count += 1
         
         db.commit()
-        print(f"✅ تمت المهمة بنجاح! ضفنا {added_count} دواء جديد لقاعدة البيانات.")
+        print(f"✅ تمت المهمة بنجاح! ضفنا {added_count} دواء جديد (موزعين على جدولين المنتجات والمخزون).")
     
     except Exception as e:
+        db.rollback() # لو حصلت مشكلة نلغي العملية عشان الداتابيز متبوظش
         print(f"❌ حصلت مشكلة: {e}")
     finally:
         db.close()
