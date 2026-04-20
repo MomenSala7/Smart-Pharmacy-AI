@@ -77,56 +77,104 @@ def read_root():
 
 @app.post("/add_medication/")
 def add_medication(med: MedicationCreate, db: Session = Depends(get_db)):
-    """إضافة دواء جديد لقاعدة البيانات"""
-    new_med = models.Medication(
-        name=med.name, category=med.category,
-        current_stock=med.current_stock, price=med.price,
-        min_stock=med.min_stock, daily_usage=med.daily_usage,
+    """إضافة دواء جديد لقاعدة البيانات (موزع على جدولين)"""
+    
+    # 🌟 التعديل الجديد: 1. إضافة البيانات الأساسية في جدول Product
+    new_product = models.Product(
+        brand_name=med.name, 
+        category=med.category,
+        unit_price=med.price
+    )
+    db.add(new_product)
+    db.commit()
+    db.refresh(new_product) # عشان ناخد الـ ID اللي اتعمل للدواء
+
+    # 🌟 التعديل الجديد: 2. إضافة المخزون والذكاء الاصطناعي في جدول Inventory وربطهم بالدواء
+    new_inventory = models.Inventory(
+        product_id=new_product.id,
+        stock_level=med.current_stock,
+        min_stock=med.min_stock,
+        daily_usage=med.daily_usage,
         lead_time_days=med.lead_time_days
     )
-    db.add(new_med)
+    db.add(new_inventory)
     db.commit()
-    db.refresh(new_med)
-    return {"message": "✅ تم إضافة الدواء بنجاح!", "medication": new_med}
+
+    return {"message": "✅ تم إضافة الدواء والمخزون بنجاح!", "product_id": new_product.id}
 
 @app.get("/medications/")
 def get_all_medications(db: Session = Depends(get_db)):
     """سحب كل الأدوية عشان نعرضها في شاشة فلاتر (الداشبورد)"""
-    medications = db.query(models.Medication).all()
+    
+    # 🌟 التعديل الجديد: بنعمل Join عشان ندمج جدول الدواء مع جدول المخزون في رد واحد يروح لفلاتر
+    results = db.query(models.Product, models.Inventory).join(models.Inventory).all()
+    
+    medications = []
+    for product, inventory in results:
+        medications.append({
+            "id": product.id,
+            "name": product.brand_name, # فلاتر متوقع name فبندياله brand_name
+            "category": product.category,
+            "price": product.unit_price,
+            "current_stock": inventory.stock_level,
+            "min_stock": inventory.min_stock,
+            "daily_usage": inventory.daily_usage,
+            "lead_time_days": inventory.lead_time_days
+        })
     return medications
 
 @app.delete("/delete_medication/{med_id}")
 def delete_medication(med_id: int, db: Session = Depends(get_db)):
     """حذف دواء من قاعدة البيانات باستخدام الـ ID بتاعه"""
-    med = db.query(models.Medication).filter(models.Medication.id == med_id).first()
     
-    if not med:
+    # 🌟 التعديل الجديد: بنحذف المخزون الأول (عشان مربوط بالدواء) وبعدين نحذف الدواء نفسه
+    inventory = db.query(models.Inventory).filter(models.Inventory.product_id == med_id).first()
+    product = db.query(models.Product).filter(models.Product.id == med_id).first()
+    
+    if not product:
         raise HTTPException(status_code=404, detail="❌ الدواء غير موجود")
         
-    db.delete(med)
+    if inventory:
+        db.delete(inventory)
+        
+    db.delete(product)
     db.commit()
-    return {"message": "🗑️ تم حذف الدواء بنجاح"}
+    return {"message": "🗑️ تم حذف الدواء والمخزون بنجاح"}
 
 @app.put("/sell_medication/{med_id}")
 def sell_medication(med_id: int, sale: SellMedication, db: Session = Depends(get_db)):
-    """عملية الكاشير: بيع دواء وخصم الكمية من المخزن"""
-    med = db.query(models.Medication).filter(models.Medication.id == med_id).first()
+    """عملية الكاشير: بيع دواء وخصم الكمية من المخزن وتسجيل الشحنة"""
     
-    if not med:
-        raise HTTPException(status_code=404, detail="عذراً، هذا الدواء غير مسجل!")
+    # 1. البحث عن المخزون الخاص بالدواء
+    inventory = db.query(models.Inventory).filter(models.Inventory.product_id == med_id).first()
     
-    # فحص الأمان: هل المخزن يكفي للبيع؟
-    if med.current_stock < sale.quantity:
+    if not inventory:
+        raise HTTPException(status_code=404, detail="عذراً، مخزون هذا الدواء غير مسجل!")
+    
+    # 2. فحص الأمان: هل المخزن يكفي للبيع؟
+    if inventory.stock_level < sale.quantity:
         raise HTTPException(
             status_code=400, 
-            detail=f"الكمية لا تكفي! المتاح فقط {med.current_stock} علبة."
+            detail=f"الكمية لا تكفي! المتاح فقط {inventory.stock_level} علبة."
         )
         
-    # عملية الخصم الحسابية
-    med.current_stock -= sale.quantity
+    # 3. عملية الخصم الحسابية من المخزون
+    inventory.stock_level -= sale.quantity
+    
+    # 🌟 التعديل الجديد: 4. تسجيل حركة البيع في جدول Shipment
+    # (بنستخدم قيم افتراضية 1 للعميل والشيفت والموسم عشان السيرفر ميضربش)
+    new_shipment = models.Shipment(
+        product_id=med_id,
+        boxes_shipped=sale.quantity,
+        customer_id=1, 
+        shift_id=1,
+        season_id=1
+    )
+    db.add(new_shipment)
+    
     db.commit()
     
-    return {"message": "✅ تمت عملية البيع بنجاح", "remaining_stock": med.current_stock}
+    return {"message": "✅ تمت عملية البيع وتسجيل الشحنة بنجاح", "remaining_stock": inventory.stock_level}
 
 # ==========================================
 # 6. الذكاء الاصطناعي - التنبؤ بالنواقص (Prophet Integration)
@@ -135,10 +183,12 @@ def sell_medication(med_id: int, sale: SellMedication, db: Session = Depends(get
 def predict_shortage(med_id: int, db: Session = Depends(get_db)):
     """تحليل الذكاء الاصطناعي: دمج تريند السوق العام مع أرقام الدواء الفعلي"""
     
-    # 1. البحث عن الدواء
-    med = db.query(models.Medication).filter(models.Medication.id == med_id).first()
-    if not med:
-        raise HTTPException(status_code=404, detail="❌ الدواء مش موجود!")
+    # 1. البحث عن الدواء في جدولين (Product عشان الاسم، و Inventory عشان الأرقام)
+    product = db.query(models.Product).filter(models.Product.id == med_id).first()
+    inventory = db.query(models.Inventory).filter(models.Inventory.product_id == med_id).first()
+    
+    if not product or not inventory:
+        raise HTTPException(status_code=404, detail="❌ الدواء أو مخزونه مش موجود!")
 
     if ml_model is None:
         raise HTTPException(status_code=500, detail="❌ الموديل غير متاح حالياً")
@@ -162,14 +212,14 @@ def predict_shortage(med_id: int, db: Session = Depends(get_db)):
         if start_stock > 0 and end_stock < start_stock:
             trend_drop_percentage = (start_stock - end_stock) / start_stock
 
-        # 5. حساب الضغط الفعلي على هذا الدواء تحديداً
-        if med.current_stock > 0:
-            drug_pressure = (med.daily_usage * 7) / med.current_stock
+        # 5. حساب الضغط الفعلي على هذا الدواء تحديداً (من جدول المخزون الجديد)
+        if inventory.stock_level > 0:
+            drug_pressure = (inventory.daily_usage * 7) / inventory.stock_level
         else:
             drug_pressure = 1.0 # المخزون صفر أصلاً
 
         # 6. دمج تريند الذكاء الاصطناعي مع حالة الدواء الحالية (المعادلة السحرية)
-        if med.current_stock <= med.min_stock:
+        if inventory.stock_level <= inventory.min_stock:
             # لو الدواء تحت الحد الأدنى، الخطر عالي جداً وبنزود عليه تريند السوق
             probability = 0.85 + trend_drop_percentage 
         else:
@@ -184,9 +234,9 @@ def predict_shortage(med_id: int, db: Session = Depends(get_db)):
         status = "Critical Warning" if is_shortage else "Safe"
 
         return {
-            "medication_id": med.id,
-            "medication_name": med.name,
-            "current_stock": med.current_stock,
+            "medication_id": product.id,
+            "medication_name": product.brand_name,
+            "current_stock": inventory.stock_level,
             "shortage_probability": f"{probability:.1%}",
             "status": status,
             "message": "⚠️ الذكاء الاصطناعي يتوقع نقص الدواء قريباً!" if is_shortage else "✅ المخزون والمؤشرات المستقبلية آمنة."
