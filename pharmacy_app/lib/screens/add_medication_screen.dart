@@ -24,12 +24,12 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
         _isLoading = true;
       });
 
-      // تجهيز البيانات زي ما الباك إند متوقعها
       // تجهيز البيانات زي ما الباك إند (main.py) متوقعها بالظبط!
+      // استخدمنا tryParse عشان نحمي التطبيق من أي كراش لو اليوزر دخل نص بالغلط
       final newData = {
         "name": _nameController.text,
         "category": _companyController.text, // بعتنا الشركة كأنها التصنيف مؤقتاً
-        "current_stock": int.parse(_stockController.text),
+        "current_stock": int.tryParse(_stockController.text.trim()) ?? 0,
         "price": 50.0,            // قيمة افتراضية
         "min_stock": 10,          // قيمة افتراضية
         "daily_usage": 5.0,       // قيمة افتراضية عشان موديل الـ ML
@@ -60,6 +60,14 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
         );
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _stockController.dispose();
+    _companyController.dispose();
+    super.dispose();
   }
 
   @override
@@ -96,7 +104,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
               TextFormField(
                 controller: _companyController,
                 decoration: InputDecoration(
-                  labelText: 'الشركة المصنعة',
+                  labelText: 'الشركة المصنعة / التصنيف',
                   prefixIcon: const Icon(Icons.business, color: Colors.teal),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -117,7 +125,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
               ),
               const SizedBox(height: 40),
               
-              // زرار بتع الحفظ
+              // زرار الحفظ
               SizedBox(
                 height: 50,
                 child: ElevatedButton(
