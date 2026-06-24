@@ -5,6 +5,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from typing import List
 
 import pandas as pd
 import numpy as np
@@ -66,6 +67,17 @@ class MedicationCreate(BaseModel):
 class SellMedication(BaseModel):
     quantity: int
 
+# --- Pydantic Models for Procurement (الطلبيات) ---
+class OrderItem(BaseModel):
+    product_id: int
+    requested_quantity: int
+    total_cost: float
+    urgency_tag: str
+
+class OrderConfirmRequest(BaseModel):
+    items: List[OrderItem]
+
+
 # ==========================================
 # 5. مسارات الـ API (Endpoints)
 # ==========================================
@@ -73,7 +85,7 @@ class SellMedication(BaseModel):
 @app.get("/")
 def read_root():
     """مسار اختبار السيرفر"""
-    return {"message": "Advanced Pharmacy AI is Ready! 🚀"}
+    return {"message": "Advanced Pharmacy AI is Ready! "}
 
 @app.post("/add_medication/")
 def add_medication(med: MedicationCreate, db: Session = Depends(get_db)):
@@ -244,3 +256,66 @@ def predict_shortage(med_id: int, db: Session = Depends(get_db)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI Prediction Error: {str(e)}")
+
+# ==========================================
+# 7. مسارات الطلبيات الذكية (Smart Procurement)
+# ==========================================
+
+# --- 1. Endpoint: Get AI Suggestions for Procurement ---
+@app.get("/api/procurement/suggestions")
+def get_procurement_suggestions(db: Session = Depends(get_db)):
+    # هنجيب بس الأدوية اللي مخزونها أقل من أو يساوي الحد الآمن
+    low_stock_items = db.query(models.Product).join(models.Inventory).filter(
+        models.Inventory.stock_level <= models.Inventory.min_stock
+    ).all()
+
+    suggestions = []
+    for product in low_stock_items:
+        inv = product.inventory
+        
+        # AI Logic: بنقترح كمية توصل المخزن للحد الآمن + تكفي استهلاك 30 يوم
+        suggested_qty = (inv.min_stock - inv.stock_level) + int(inv.daily_usage * 30)
+        if suggested_qty <= 0:
+            suggested_qty = 10 # كحد أدنى احتياطي
+
+        # Urgency Logic: تحديد مستوى الاستعجال
+        if inv.stock_level == 0:
+            urgency = "Critical"
+        elif inv.stock_level <= (inv.min_stock / 2):
+            urgency = "High"
+        else:
+            urgency = "Moderate"
+
+        # Total Cost Calculation
+        est_cost = suggested_qty * product.unit_price
+
+        suggestions.append({
+            "product_id": product.id,
+            "brand_name": product.brand_name,
+            "current_stock": inv.stock_level,
+            "suggested_quantity": suggested_qty,
+            "unit_price": product.unit_price,
+            "estimated_total_cost": round(est_cost, 2),
+            "urgency_tag": urgency
+        })
+    return suggestions
+
+# --- 2. Endpoint: Confirm Order ---
+@app.post("/api/procurement/confirm")
+def confirm_procurement_order(order_req: OrderConfirmRequest, db: Session = Depends(get_db)):
+    try:
+        for item in order_req.items:
+            new_order = models.ProcurementOrder(
+                product_id=item.product_id,
+                suggested_quantity=item.requested_quantity, # افتراضيا الكمية المقترحة هي المطلوبة
+                requested_quantity=item.requested_quantity,
+                urgency_tag=item.urgency_tag,
+                total_cost=item.total_cost,
+                status="Pending"
+            )
+            db.add(new_order)
+        db.commit()
+        return {"message": "Order confirmed successfully", "status": "success"}
+    except Exception as e:
+        db.rollback()
+        return {"error": str(e)}

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-// ملف الرسم البياني الخطي (هنربطه بالداتابيز لاحقاً)
+// ملف الرسم البياني الخطي (مربوط باسم الدواء)
 class LineChartWidget extends StatelessWidget {
-  const LineChartWidget({super.key});
+  final String drugName; // 🌟 التعديل الجديد: استقبال اسم الدواء
+
+  const LineChartWidget({super.key, required this.drugName});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +20,8 @@ class LineChartWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('معدل سحب دواء (Panadol) آخر 6 أشهر 📉', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal)),
+          // 🌟 التعديل الجديد: عرض اسم الدواء المتغير بدل كلمة بانادول الثابتة
+          Text('معدل سحب دواء ($drugName) آخر 6 أشهر ', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.teal)),
           const SizedBox(height: 20),
           Expanded(
             child: LineChart(

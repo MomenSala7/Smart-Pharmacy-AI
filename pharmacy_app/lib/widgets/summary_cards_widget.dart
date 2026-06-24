@@ -17,8 +17,10 @@ class SummaryCardsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Wrap(
+      spacing: 12.0, // المسافة الأفقية بين الكروت
+      runSpacing: 12.0, // المسافة الرأسية لما الكروت تنزل سطر جديد
+      alignment: WrapAlignment.center, // عشان يبقوا متسنترين في النص
       children: [
         _buildSummaryCard('إجمالي', total, Colors.blue),
         _buildSummaryCard('متاح', available, Colors.green),
@@ -31,12 +33,19 @@ class SummaryCardsWidget extends StatelessWidget {
   // دالة مساعدة لرسم الكارت الواحد
   Widget _buildSummaryCard(String title, int value, Color color) {
     return Container(
-      width: 100,
+      width: 100, // سيبنا العرض زي ما هو عشان الـ Wrap هيتصرف
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 10, spreadRadius: 2, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1), 
+            blurRadius: 10, 
+            spreadRadius: 2, 
+            offset: const Offset(0, 4)
+          )
+        ],
       ),
       child: Column(
         children: [

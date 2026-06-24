@@ -15,6 +15,7 @@ class Product(Base):
     # العلاقات
     inventory = relationship("Inventory", back_populates="product", uselist=False)
     shipments = relationship("Shipment", back_populates="product")
+    procurement_orders = relationship("ProcurementOrder", back_populates="product") # الربط مع جدول الطلبيات الجديد
 
 # 2. جدول المخزون (اللي فيه تفاصيل الذكاء الاصطناعي)
 class Inventory(Base):
@@ -75,3 +76,20 @@ class Shipment(Base):
     customer = relationship("Customer", back_populates="shipments")
     shift = relationship("Shift", back_populates="shipments")
     season = relationship("Season", back_populates="shipments")
+
+# 7. جدول الطلبيات الذكية (Smart Procurement) - الجديد 🚀
+class ProcurementOrder(Base):
+    __tablename__ = "ProcurementOrder"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey("Product.id"))
+    
+    suggested_quantity = Column(Integer) # الكمية المقترحة من موديل الذكاء الاصطناعي
+    requested_quantity = Column(Integer) # الكمية اللي الصيدلي هيحددها في النهاية
+    urgency_tag = Column(String)         # مستوى الاستعجال (Critical, Moderate)
+    total_cost = Column(Float)           # إجمالي التكلفة المتوقعة
+    status = Column(String, default="Pending") # حالة الطلب (Pending, Confirmed, Cancelled)
+    order_date = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # العلاقات
+    product = relationship("Product", back_populates="procurement_orders")

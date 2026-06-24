@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/dashboard_models.dart';
 import '../services/dashboard_service_interface.dart';
 import 'add_medication_screen.dart';
+import 'procurement_screen.dart'; // 🌟 التعديل الجديد: استدعاء شاشة الطلبيات الذكية
+import 'inventory_screen.dart';
 
 // 👇 استدعاء مكعبات الليجو (Widgets) اللي فصلناها 👇
 import '../widgets/summary_cards_widget.dart';
@@ -70,8 +72,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          // 🌟 التعديل الجديد: زرار الطلبيات الذكية
+          IconButton(
+            icon: const Icon(Icons.shopping_cart_checkout, size: 28),
+            tooltip: 'الطلبيات الذكية',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProcurementScreen()),
+              );
+            },
+          ),
+
+          // زرار جرد المخزون
+IconButton(
+  icon: const Icon(Icons.inventory_2, size: 28),
+  tooltip: 'جرد المخزون',
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const InventoryScreen()),
+    );
+  },
+),
+          // زرار إضافة دواء
           IconButton(
             icon: const Icon(Icons.add_box, size: 28),
+            tooltip: 'إضافة دواء',
             onPressed: () async {
               final result = await Navigator.push(
                 context,
@@ -122,10 +149,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
 
                 // 3. الرسم البياني الخطي
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: LineChartWidget(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                // بياخد اسم الدواء من التوقع المخصص (اللي الصيدلي داس عليه) أو من أول دواء في اللستة
+                child: LineChartWidget(drugName: activePrediction?.drugName ?? 'دواء عام'),
                 ),
+                
                 
                 // 4. الرسم البياني الدائري
                 Padding(

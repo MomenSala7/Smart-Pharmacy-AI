@@ -12,6 +12,14 @@ class AiPredictionWidget extends StatelessWidget {
     required this.isLoading,
   });
 
+  // 🌟 التعديل الجديد: دالة مساعدة لحساب الأيام المتبقية تقريبياً بناءً على نسبة الخطر
+  String calculateRemainingDays(double confidence) {
+    if (confidence >= 80) return "1 - 3 أيام (حرج جداً)";
+    if (confidence >= 50) return "4 - 7 أيام (تحذير)";
+    if (confidence >= 30) return "8 - 14 يوم (مستقر نسبياً)";
+    return "أكثر من أسبوعين (آمن)";
+  }
+
   @override
   Widget build(BuildContext context) {
     if (activePrediction == null && !isLoading) return const SizedBox.shrink();
@@ -37,7 +45,7 @@ class AiPredictionWidget extends StatelessWidget {
             children: [
               Icon(Icons.auto_awesome, color: Colors.yellowAccent),
               SizedBox(width: 8),
-              Text('توقعات الذكاء الاصطناعي 🤖', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text('توقعات الذكاء الاصطناعي ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
             ],
           ),
           const SizedBox(height: 16),
@@ -58,16 +66,17 @@ class AiPredictionWidget extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(8)),
-                  child: Text('دقة: ${activePrediction!.confidenceLevel}%', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                  child: Text('نسبة الخطر: ${activePrediction!.confidenceLevel}%', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
                 )
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.date_range, color: Colors.white70, size: 16),
+                const Icon(Icons.timer, color: Colors.white70, size: 16),
                 const SizedBox(width: 8),
-                Text('تاريخ النقص المتوقع: ${activePrediction!.expectedShortageDate}', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                // التعديل هنا: الجملة بقت ديناميكية وبتتغير حسب نسبة الخطر
+                Text('المخزون يكفي لمدة: ${calculateRemainingDays(activePrediction!.confidenceLevel)}', style: const TextStyle(color: Colors.white, fontSize: 14)),
               ],
             ),
             const SizedBox(height: 12),

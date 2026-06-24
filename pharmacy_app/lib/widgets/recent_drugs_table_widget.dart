@@ -142,7 +142,7 @@ class RecentDrugsTableWidget extends StatelessWidget {
                                             quantityToSell = tempQuantity; 
                                             Navigator.pop(context, true);  
                                           },
-                                          child: const Text('تأكيد البيع 💸', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                          child: const Text('تأكيد البيع ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                                         ),
                                       ],
                                     );
