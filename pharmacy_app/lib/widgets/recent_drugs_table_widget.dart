@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import '../models/dashboard_models.dart';
 import '../services/dashboard_service_interface.dart';
 
-// (الكاشير، الـ AI، الحذف) هنا
-// بنستقبل الـ service عشان نكلم السيرفر، وبنستقبل onRefresh عشان نحدث الشاشة الأم
 class RecentDrugsTableWidget extends StatelessWidget {
   final List<RecentDrug> recentDrugs;
   final IDashboardService dashboardService;
-  final VoidCallback onRefresh; // عشان نأمر الشاشة الرئيسية تعمل ريفريش
-  final Function(int) onFetchPrediction; // عشان نأمر الشاشة الرئيسية تجيب التوقع
+  final VoidCallback onRefresh; 
+  final Function(int) onFetchPrediction; 
 
   const RecentDrugsTableWidget({
     super.key,
@@ -78,13 +76,11 @@ class RecentDrugsTableWidget extends StatelessWidget {
                   ),
                   DataCell(Text(drug.dateUpdated, style: const TextStyle(color: Colors.grey))),
                   
-                  // هنا خلينا الخلية تشيل 3 أزرار جنب بعض
                   DataCell(
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         
-                        // زرار الكاشير (البيع)
                         IconButton(
                           icon: const Icon(Icons.point_of_sale, color: Colors.green), 
                           tooltip: 'تسجيل بيع',
@@ -161,7 +157,7 @@ class RecentDrugsTableWidget extends StatelessWidget {
                                     backgroundColor: Colors.green
                                   )
                                 );
-                                // بنعمل ريفريش أوتوماتيك للداشبورد 
+                                
                                 onRefresh();
                               } else if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -172,15 +168,15 @@ class RecentDrugsTableWidget extends StatelessWidget {
                           },
                         ),
 
-                        // زرار الذكاء الاصطناعي (زي ما هو)
+                        
                         IconButton(
                           icon: const Icon(Icons.psychology, color: Colors.deepPurpleAccent), 
                           tooltip: 'تحليل الذكاء الاصطناعي',
-                          // بننادي الدالة اللي بتجيب التوقع من الشاشة الرئيسية
+                          
                           onPressed: () => onFetchPrediction(drug.id),
                         ),
                         
-                        // زرار الحذف (زي ما هو)
+                        
                         IconButton(
                           icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                           tooltip: 'حذف الدواء',

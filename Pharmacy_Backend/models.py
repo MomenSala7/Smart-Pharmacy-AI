@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 from database import Base
 import datetime
 
-# 1. جدول المنتجات / الأدوية
 class Product(Base):
     __tablename__ = "Product"
     
@@ -12,12 +11,10 @@ class Product(Base):
     category = Column(String)
     unit_price = Column(Float)
 
-    # العلاقات
     inventory = relationship("Inventory", back_populates="product", uselist=False)
     shipments = relationship("Shipment", back_populates="product")
     procurement_orders = relationship("ProcurementOrder", back_populates="product") # الربط مع جدول الطلبيات الجديد
 
-# 2. جدول المخزون (اللي فيه تفاصيل الذكاء الاصطناعي)
 class Inventory(Base):
     __tablename__ = "Inventory"
     
@@ -30,7 +27,6 @@ class Inventory(Base):
 
     product = relationship("Product", back_populates="inventory")
 
-# 3. جدول العملاء
 class Customer(Base):
     __tablename__ = "Customer"
     
@@ -39,7 +35,6 @@ class Customer(Base):
     
     shipments = relationship("Shipment", back_populates="customer")
 
-# 4. جدول الشيفتات
 class Shift(Base):
     __tablename__ = "Shift"
     
@@ -48,7 +43,6 @@ class Shift(Base):
     
     shipments = relationship("Shipment", back_populates="shift")
 
-# 5. جدول المواسم
 class Season(Base):
     __tablename__ = "Season"
     
@@ -57,7 +51,6 @@ class Season(Base):
     
     shipments = relationship("Shipment", back_populates="season")
 
-# 6. جدول المبيعات / الشحنات
 class Shipment(Base):
     __tablename__ = "Shipment"
     
@@ -65,31 +58,27 @@ class Shipment(Base):
     date = Column(DateTime, default=datetime.datetime.utcnow)
     boxes_shipped = Column(Integer)
     
-    # مفاتيح الربط
     product_id = Column(Integer, ForeignKey("Product.id"))
     customer_id = Column(Integer, ForeignKey("Customer.id"))
     shift_id = Column(Integer, ForeignKey("Shift.id"))
     season_id = Column(Integer, ForeignKey("Season.id"))
 
-    # العلاقات
     product = relationship("Product", back_populates="shipments")
     customer = relationship("Customer", back_populates="shipments")
     shift = relationship("Shift", back_populates="shipments")
     season = relationship("Season", back_populates="shipments")
 
-# 7. جدول الطلبيات الذكية (Smart Procurement) - الجديد 🚀
 class ProcurementOrder(Base):
     __tablename__ = "ProcurementOrder"
     
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("Product.id"))
     
-    suggested_quantity = Column(Integer) # الكمية المقترحة من موديل الذكاء الاصطناعي
-    requested_quantity = Column(Integer) # الكمية اللي الصيدلي هيحددها في النهاية
-    urgency_tag = Column(String)         # مستوى الاستعجال (Critical, Moderate)
-    total_cost = Column(Float)           # إجمالي التكلفة المتوقعة
-    status = Column(String, default="Pending") # حالة الطلب (Pending, Confirmed, Cancelled)
+    suggested_quantity = Column(Integer) 
+    requested_quantity = Column(Integer) 
+    urgency_tag = Column(String)         
+    total_cost = Column(Float)           
+    status = Column(String, default="Pending") 
     order_date = Column(DateTime, default=datetime.datetime.utcnow)
 
-    # العلاقات
     product = relationship("Product", back_populates="procurement_orders")

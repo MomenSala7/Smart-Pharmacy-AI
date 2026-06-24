@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/dashboard_models.dart';
 
-// قائمة التنبيهات السفلية هنا 
+
 class AlertsListWidget extends StatelessWidget {
   final List<DrugAlert> alerts;
 

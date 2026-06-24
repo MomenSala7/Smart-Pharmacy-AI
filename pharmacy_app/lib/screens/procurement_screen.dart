@@ -11,7 +11,6 @@ class _ProcurementScreenState extends State<ProcurementScreen> {
   List<dynamic> items = [];
   bool isLoading = true;
 
-  // تنبيه: لو بتشغل على موبايل بالكابل مش متصفح كروم، غير الـ IP ده لـ 192.168.1.2 مثلاً
   final String baseUrl = "http://127.0.0.1:8000";
 
   @override
@@ -61,7 +60,7 @@ class _ProcurementScreenState extends State<ProcurementScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('✅ تم إرسال الطلبية بنجاح!'), backgroundColor: Colors.green),
         );
-        setState(() { items.clear(); }); // بنفضي الشاشة بعد التأكيد
+        setState(() { items.clear(); }); 
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

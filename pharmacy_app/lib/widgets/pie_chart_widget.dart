@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/dashboard_models.dart';
 
-// ملف الرسم الدائري (Donut Chart) لنسب المخزون
+
 class PieChartWidget extends StatelessWidget {
   final StockPercentage stockPercent;
 

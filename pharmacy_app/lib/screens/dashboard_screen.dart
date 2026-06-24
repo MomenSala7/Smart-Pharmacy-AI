@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import '../models/dashboard_models.dart';
 import '../services/dashboard_service_interface.dart';
 import 'add_medication_screen.dart';
-import 'procurement_screen.dart'; // 🌟 التعديل الجديد: استدعاء شاشة الطلبيات الذكية
+import 'procurement_screen.dart'; 
 import 'inventory_screen.dart';
 
-// 👇 استدعاء مكعبات الليجو (Widgets) اللي فصلناها 👇
 import '../widgets/summary_cards_widget.dart';
 import '../widgets/ai_prediction_widget.dart';
 import '../widgets/line_chart_widget.dart';
@@ -25,7 +24,6 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   late Future<DashboardData> _dashboardDataFuture;
   
-  // متغيرات جديدة عشان الذكاء الاصطناعي التفاعلي
   SmartPrediction? _customPrediction; 
   bool _isLoadingPrediction = false;
 
@@ -37,12 +35,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _loadData() {
     setState(() {
-      _customPrediction = null; // تصفير التوقع المخصص مع كل ريفريش
+      _customPrediction = null; 
       _dashboardDataFuture = widget.dashboardService.getDashboardData();
     });
   }
 
-  // الدالة اللي بتشتغل لما ندوس على الروبوت
+  
   Future<void> _fetchSpecificPrediction(int drugId) async {
     setState(() {
       _isLoadingPrediction = true;
@@ -72,7 +70,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          // 🌟 التعديل الجديد: زرار الطلبيات الذكية
+          
           IconButton(
             icon: const Icon(Icons.shopping_cart_checkout, size: 28),
             tooltip: 'الطلبيات الذكية',
@@ -84,7 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
           ),
 
-          // زرار جرد المخزون
+          
 IconButton(
   icon: const Icon(Icons.inventory_2, size: 28),
   tooltip: 'جرد المخزون',
@@ -95,7 +93,7 @@ IconButton(
     );
   },
 ),
-          // زرار إضافة دواء
+         
           IconButton(
             icon: const Icon(Icons.add_box, size: 28),
             tooltip: 'إضافة دواء',
@@ -105,7 +103,7 @@ IconButton(
                 MaterialPageRoute(builder: (context) => AddMedicationScreen(service: widget.dashboardService)),
               );
               if (result == true) {
-                _loadData(); // ريفريش بعد الإضافة
+                _loadData(); 
               }
             },
           )
@@ -125,11 +123,11 @@ IconButton(
           final data = snapshot.data!;
           SmartPrediction? activePrediction = _customPrediction ?? (data.aiPredictions.isNotEmpty ? data.aiPredictions.first : null);
 
-          // .. الشاشة بقت مجرد استدعاء للـ Widgets
+          
           return SingleChildScrollView(
             child: Column(
               children: [
-                // 1. كروت الإحصائيات
+                
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: SummaryCardsWidget(
@@ -142,38 +140,38 @@ IconButton(
                 const Divider(thickness: 1, height: 1),
                 const SizedBox(height: 10),
                 
-                // 2. كارت الذكاء الاصطناعي
+                
                 AiPredictionWidget(
                   activePrediction: activePrediction, 
                   isLoading: _isLoadingPrediction
                 ),
 
-                // 3. الرسم البياني الخطي
+                
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                // بياخد اسم الدواء من التوقع المخصص (اللي الصيدلي داس عليه) أو من أول دواء في اللستة
+                
                 child: LineChartWidget(drugName: activePrediction?.drugName ?? 'دواء عام'),
                 ),
                 
                 
-                // 4. الرسم البياني الدائري
+                
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: PieChartWidget(stockPercent: data.stockPercent),
                 ),
 
-                // 5. الجدول العملاق
+                
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: RecentDrugsTableWidget(
                     recentDrugs: data.recentDrugs,
                     dashboardService: widget.dashboardService,
-                    onRefresh: _loadData, // بيبعت دالة الريفريش للجدول عشان يقدر يحدث الشاشة
-                    onFetchPrediction: _fetchSpecificPrediction, // بيبعت دالة الـ AI للجدول
+                    onRefresh: _loadData, 
+                    onFetchPrediction: _fetchSpecificPrediction, 
                   ),
                 ),
 
-                // 6. قائمة التنبيهات السفلية
+                
                 AlertsListWidget(alerts: data.alerts),
                 const SizedBox(height: 30),
               ],

@@ -21,7 +21,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
   void initState() {
     super.initState();
     fetchInventory();
-    // مراقبة شريط البحث عشان يفلتر الداتا مع كل حرف بيتكتب
     searchController.addListener(() {
       filterSearchResults(searchController.text);
     });
@@ -45,7 +44,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  // 🔍 دالة الفلترة (البحث)
   void filterSearchResults(String query) {
     if (query.isEmpty) {
       setState(() { filteredMedications = allMedications; });
@@ -58,7 +56,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     });
   }
 
-  // 🛒 دالة البيع
   Future<void> sellMedication(int id, int quantity) async {
     try {
       final response = await http.put(
@@ -68,7 +65,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       );
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ تم البيع بنجاح وتسجيل الشحنة'), backgroundColor: Colors.green));
-        fetchInventory(); // تحديث القائمة بعد البيع
+        fetchInventory(); 
       } else {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ الكمية لا تكفي أو حدث خطأ'), backgroundColor: Colors.red));
       }
@@ -77,20 +74,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  // 🗑️ دالة الحذف
   Future<void> deleteMedication(int id) async {
     try {
       final response = await http.delete(Uri.parse('$baseUrl/delete_medication/$id'));
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('🗑️ تم الحذف بنجاح من الداتابيز'), backgroundColor: Colors.green));
-        fetchInventory(); // تحديث القائمة
+        fetchInventory(); 
       }
     } catch (e) {
       print(e);
     }
   }
 
-  // 🤖 دالة توقع الذكاء الاصطناعي السريع
+  
   Future<void> predictShortage(int id, String name) async {
     showDialog(
       context: context,
@@ -99,7 +95,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
     try {
       final response = await http.get(Uri.parse('$baseUrl/predict/$id'));
-      Navigator.pop(context); // قفل اللودينج
+      Navigator.pop(context); 
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes));
         showDialog(
@@ -125,7 +121,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  // --- النوافذ المنبثقة للتأكيد ---
 
   void showSellDialog(int id, String name, int maxQuantity) {
     if (maxQuantity == 0) {
@@ -275,7 +270,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                     ],
                                   ),
                                   const Divider(height: 24),
-                                  // 🌟 أزرار العمليات (بيع - توقع - حذف)
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                     children: [

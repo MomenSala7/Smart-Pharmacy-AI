@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-//  كروت الإحصائيات في ملف مستقل لتقليل زحمة الكود
 class SummaryCardsWidget extends StatelessWidget {
   final int total;
   final int available;
@@ -18,9 +17,9 @@ class SummaryCardsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: 12.0, // المسافة الأفقية بين الكروت
-      runSpacing: 12.0, // المسافة الرأسية لما الكروت تنزل سطر جديد
-      alignment: WrapAlignment.center, // عشان يبقوا متسنترين في النص
+      spacing: 12.0, 
+      runSpacing: 12.0, 
+      alignment: WrapAlignment.center, 
       children: [
         _buildSummaryCard('إجمالي', total, Colors.blue),
         _buildSummaryCard('متاح', available, Colors.green),
@@ -30,10 +29,9 @@ class SummaryCardsWidget extends StatelessWidget {
     );
   }
 
-  // دالة مساعدة لرسم الكارت الواحد
   Widget _buildSummaryCard(String title, int value, Color color) {
     return Container(
-      width: 100, // سيبنا العرض زي ما هو عشان الـ Wrap هيتصرف
+      width: 100, 
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.white,

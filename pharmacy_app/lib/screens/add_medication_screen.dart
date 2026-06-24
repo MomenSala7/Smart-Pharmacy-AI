@@ -16,7 +16,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
   final _stockController = TextEditingController();
   final _companyController = TextEditingController();
 
-  bool _isLoading = false; // عشان نظهر علامة تحميل وإحنا بنبعت للسيرفر
+  bool _isLoading = false; 
 
   void _submitData() async {
     if (_formKey.currentState!.validate()) {
@@ -24,19 +24,18 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
         _isLoading = true;
       });
 
-      // تجهيز البيانات زي ما الباك إند (main.py) متوقعها بالظبط!
-      // استخدمنا tryParse عشان نحمي التطبيق من أي كراش لو اليوزر دخل نص بالغلط
+      
       final newData = {
         "name": _nameController.text,
-        "category": _companyController.text, // بعتنا الشركة كأنها التصنيف مؤقتاً
+        "category": _companyController.text, 
         "current_stock": int.tryParse(_stockController.text.trim()) ?? 0,
-        "price": 50.0,            // قيمة افتراضية
-        "min_stock": 10,          // قيمة افتراضية
-        "daily_usage": 5.0,       // قيمة افتراضية عشان موديل الـ ML
-        "lead_time_days": 3       // قيمة افتراضية عشان موديل الـ ML
+        "price": 50.0,            
+        "min_stock": 10,          
+        "daily_usage": 5.0,       
+        "lead_time_days": 3       
       };
 
-      // إرسال البيانات للسيرفر
+      
       bool success = await widget.service.addMedication(newData);
       
       setState(() {
@@ -50,7 +49,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context, true); // بنقفل الشاشة ونرجع true عشان الداشبورد تعرف إن في داتا اتضافت
+        Navigator.pop(context, true); 
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

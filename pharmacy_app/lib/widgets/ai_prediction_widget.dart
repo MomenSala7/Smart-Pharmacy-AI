@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/dashboard_models.dart';
 
-// قسم الذكاء الاصطناعي التفاعلي هنا
 class AiPredictionWidget extends StatelessWidget {
   final SmartPrediction? activePrediction;
   final bool isLoading;
@@ -12,7 +11,6 @@ class AiPredictionWidget extends StatelessWidget {
     required this.isLoading,
   });
 
-  // 🌟 التعديل الجديد: دالة مساعدة لحساب الأيام المتبقية تقريبياً بناءً على نسبة الخطر
   String calculateRemainingDays(double confidence) {
     if (confidence >= 80) return "1 - 3 أيام (حرج جداً)";
     if (confidence >= 50) return "4 - 7 أيام (تحذير)";
@@ -50,7 +48,6 @@ class AiPredictionWidget extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           
-          // لو بيحمل، نظهر مؤشر تحميل، لو خلص نعرض الداتا
           if (isLoading)
             const Center(
               child: Padding(
@@ -75,7 +72,7 @@ class AiPredictionWidget extends StatelessWidget {
               children: [
                 const Icon(Icons.timer, color: Colors.white70, size: 16),
                 const SizedBox(width: 8),
-                // التعديل هنا: الجملة بقت ديناميكية وبتتغير حسب نسبة الخطر
+                
                 Text('المخزون يكفي لمدة: ${calculateRemainingDays(activePrediction!.confidenceLevel)}', style: const TextStyle(color: Colors.white, fontSize: 14)),
               ],
             ),

@@ -24,8 +24,6 @@ class PharmacyApp extends StatelessWidget {
           child: child!,
         );
       },
-      // هنا بيحصل الـ Dependency Injection!
-      // بنشغل الداشبورد ونبعتلها كلاس البيانات الوهمية
       home: DashboardScreen(dashboardService: ApiDashboardService()),
     );
   }
